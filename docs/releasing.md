@@ -10,7 +10,9 @@ Install under the same account and environment that runs the host. If you use WS
 
 Check GitHub CLI sign-in with `gh auth status`. If needed, complete `gh auth login` using your own GitHub account. You do not need write or administrator access to this public repository to verify a release.
 
-The commands below install **v0.2.0**, whose source is [commit `6d1b7bbea1e9804585df912a51d53cb350dea9d5`](https://github.com/zrack/security-audit-skill/commit/6d1b7bbea1e9804585df912a51d53cb350dea9d5). Review the source changes you intend to trust. For another version, use that version's expected commit rather than copying a value from downloaded metadata alone.
+For **v0.2.1**, use the copyable download and verification commands in the [current release notes](https://github.com/zrack/security-audit-skill/releases/tag/v0.2.1), then follow extraction and installation below. Those commands include the exact source commit for that release. The [source-checkout quickstart](../README.md#install) also selects v0.2.1.
+
+The commands below are a reproducible **prior-release example for v0.2.0**, whose source is [commit `6d1b7bbea1e9804585df912a51d53cb350dea9d5`](https://github.com/zrack/security-audit-skill/commit/6d1b7bbea1e9804585df912a51d53cb350dea9d5). Review the source changes you intend to trust. When selecting another release, change its version and both `--source-digest` and `--signer-digest` values together to that release's expected commit; do not copy a commit from downloaded metadata alone.
 
 ### 1. Download and verify
 
@@ -111,12 +113,12 @@ The owner can inspect release immutability with `gh api repos/zrack/security-aud
 5. Publication creates or verifies the version tag at the expected commit, produces build provenance, prepares a draft with its assets, checks the asset inventory/digests, and publishes. It never force-moves tags or replaces uploaded assets.
 6. Confirm the published release is immutable, then run the consumer verification commands against the downloaded ZIP and expected commit.
 
-For example, in **Bash**, after reviewing the current remote `main` revision. Choose a new, unused stable version; `v0.2.0` is already published:
+For example, in **Bash**, after reviewing the current remote `main` revision. Choose a new, unused stable version; v0.2.0 and v0.2.1 are assigned releases:
 
 ```sh
 git fetch origin main
 release_commit=$(git rev-parse origin/main)
-release_version=v0.2.1
+release_version=v0.2.2
 gh workflow run release.yml --repo zrack/security-audit-skill --ref main \
   -f version="$release_version" -f expected_sha="$release_commit"
 ```
