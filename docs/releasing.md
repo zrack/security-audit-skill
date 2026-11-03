@@ -4,33 +4,92 @@ The portable skill remains three files: `SKILL.md`, `agents/openai.yaml`, and `L
 
 ## Verify and install a release
 
-Use a current [GitHub CLI](https://cli.github.com/). These commands require its release and artifact-attestation verification commands. Choose a version and obtain its full reviewed commit SHA from the release's tag and source changes. Check that revision against the changes you intend to trust; do not treat metadata downloaded beside a ZIP as an independent trust decision.
+This route needs a current [GitHub CLI](https://cli.github.com/) with release/attestation verification commands, internet access, and an archive extractor. It does **not** need Git, Python, or an installer script. Have your local Claude Code or Codex host installed and signed in first.
 
-Run in a new, empty download directory:
+Install under the same account and environment that runs the host. If you use WSL, a container, or a remote host, its skill folder belongs inside that environment. Copying into your desktop profile does not automatically install into those environments or web/cloud sessions.
+
+Check GitHub CLI sign-in with `gh auth status`. If needed, complete `gh auth login` using your own GitHub account. You do not need write or administrator access to this public repository to verify a release.
+
+The commands below install **v0.2.0**, whose source is [commit `6d1b7bbea1e9804585df912a51d53cb350dea9d5`](https://github.com/zrack/security-audit-skill/commit/6d1b7bbea1e9804585df912a51d53cb350dea9d5). Review the source changes you intend to trust. For another version, use that version's expected commit rather than copying a value from downloaded metadata alone.
+
+### 1. Download and verify
+
+Run in your terminal. Create a new, empty directory first; choose another directory name if it already exists. These commands work in macOS/Linux shells and Windows PowerShell:
 
 ```sh
+mkdir security-audit-v0.2.0
+cd security-audit-v0.2.0
 gh release verify v0.2.0 --repo zrack/security-audit-skill
 gh release download v0.2.0 --repo zrack/security-audit-skill --pattern security-audit.zip
 gh release verify-asset v0.2.0 security-audit.zip --repo zrack/security-audit-skill
 ```
 
-Then verify the ZIP's build identity, replacing `FULL_REVIEWED_COMMIT_SHA` with the expected 40-character commit:
+Verify the ZIP's build identity against that exact source and workflow commit. This is one command on one line, including in PowerShell:
 
 ```sh
-gh attestation verify security-audit.zip \
-  --repo zrack/security-audit-skill \
-  --signer-workflow zrack/security-audit-skill/.github/workflows/release.yml \
-  --source-ref refs/heads/main \
-  --source-digest FULL_REVIEWED_COMMIT_SHA \
-  --signer-digest FULL_REVIEWED_COMMIT_SHA \
-  --deny-self-hosted-runners
+gh attestation verify security-audit.zip --repo zrack/security-audit-skill --signer-workflow zrack/security-audit-skill/.github/workflows/release.yml --source-ref refs/heads/main --source-digest 6d1b7bbea1e9804585df912a51d53cb350dea9d5 --signer-digest 6d1b7bbea1e9804585df912a51d53cb350dea9d5 --deny-self-hosted-runners
 ```
 
 Stop if any verification fails. Do not bypass a failure by accepting a checksum alone. A valid signature binds origin and bytes; it does not establish that the instructions are safe or that the host is configured appropriately.
 
-After verification, extract into a new directory. The ZIP contains only `security-audit/SKILL.md`, `security-audit/agents/openai.yaml`, and `security-audit/LICENSE`. Copy that directory to `~/.claude/skills/security-audit`, `~/.agents/skills/security-audit`, or both. Project-local equivalents are supported too. Use a destination that does not exist, and compare/back up an older installation before replacing it. Start a fresh host session if needed.
+### 2. Extract and copy the skill folder
+
+After verification succeeds, extract with your archive application, or use the command for your shell:
+
+macOS / Linux, from the download directory:
+
+```sh
+unzip security-audit.zip -d unpacked
+```
+
+Windows PowerShell:
+
+```powershell
+Expand-Archive -LiteralPath .\security-audit.zip -DestinationPath .\unpacked
+```
+
+Open `unpacked`. Its inner `security-audit` folder contains exactly:
+
+```text
+security-audit/
+├── SKILL.md
+├── agents/
+│   └── openai.yaml
+└── LICENSE
+```
+
+Using your file manager, create the parent `skills` directory below if needed, then copy the **inner `security-audit` folder** into it. Choose the host you use, or repeat for both:
+
+| Host | Parent directory on macOS / Linux | Parent directory on Windows |
+| --- | --- | --- |
+| Claude Code | `~/.claude/skills/` | `%USERPROFILE%\.claude\skills\` |
+| Codex | `~/.agents/skills/` | `%USERPROFILE%\.agents\skills\` |
+
+Here, `~` and `%USERPROFILE%` refer to your user home/profile folder. Enable hidden-file display if your file manager hides the dot-prefixed directories. Use a destination with no existing `security-audit` folder; compare and back up an older installation before replacing it.
+
+For example, a Codex installation must end in `~/.agents/skills/security-audit/SKILL.md` (Windows: `%USERPROFILE%\.agents\skills\security-audit\SKILL.md`). Avoid an extra `security-audit/security-audit` level. The ZIP intentionally has no `scripts/install.py`.
+
+### 3. Open the host and try it
+
+Start a fresh local session in the code project you want reviewed. Choose an existing code file and replace `src/main.py` below with its path. Paste the request into the host's **chat**, not the terminal shell.
+
+Claude Code:
+
+```text
+/security-audit Review src/main.py and its callers for security issues. State the reviewed scope and any missing context.
+```
+
+Codex CLI / IDE:
+
+```text
+$security-audit Review src/main.py and its callers for security issues. State the reviewed scope and any missing context.
+```
+
+In the desktop app, select **Security Audit** from its skill picker and send the same review request without the `$security-audit` prefix. Check that the response names the file you selected. If the skill is missing, see [troubleshooting](../README.md#troubleshooting). The [README demo](../README.md#use) uses an included packet from the source checkout; you do not need that checkout to review your own code with the ZIP installation.
 
 The source-checkout installer in the [README](../README.md#install) remains an alternative. It requires Git and Python but no GitHub CLI. A copy is a snapshot; a deliberate directory symlink follows checkout changes. Neither path changes host permission settings.
+
+The remaining sections are for **repository maintainers**. Installing or using the skill does not require these steps.
 
 ## Maintainer prerequisites
 
@@ -52,13 +111,14 @@ The owner can inspect release immutability with `gh api repos/zrack/security-aud
 5. Publication creates or verifies the version tag at the expected commit, produces build provenance, prepares a draft with its assets, checks the asset inventory/digests, and publishes. It never force-moves tags or replaces uploaded assets.
 6. Confirm the published release is immutable, then run the consumer verification commands against the downloaded ZIP and expected commit.
 
-For example, after reviewing the current remote `main` revision:
+For example, in **Bash**, after reviewing the current remote `main` revision. Choose a new, unused stable version; `v0.2.0` is already published:
 
 ```sh
 git fetch origin main
 release_commit=$(git rev-parse origin/main)
+release_version=v0.2.1
 gh workflow run release.yml --repo zrack/security-audit-skill --ref main \
-  -f version=v0.2.0 -f expected_sha="$release_commit"
+  -f version="$release_version" -f expected_sha="$release_commit"
 ```
 
 The ZIP is accompanied by checksums, build metadata, and its provenance bundle. GitHub's release attestation locks the published tag/assets to a signed release record. Build provenance separately identifies the workflow and source revision. Consumers must verify those identities for the controls to help.

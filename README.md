@@ -6,6 +6,8 @@ Security Audit gives your coding agent a review method: establish the scope, tra
 
 ![Security Audit workflow: define the scope, investigate the path, check controls, and report supported findings with coverage limits.](assets/security-audit-workflow.svg)
 
+[Install](#install) · [First review](#use) · [Troubleshooting](#troubleshooting)
+
 ## What it reviews
 
 Use it for a security-focused review of a snippet, selected files, working-tree changes, a commit range, a pull request, dependency changes, or a repository. Relevant review areas include:
@@ -22,41 +24,68 @@ A suspicious pattern starts an investigation. It does not automatically become a
 
 ## Install
 
-You need Git and Python 3.10 or newer. The skill itself requires an installed Claude Code or Codex host, with access to the code you want reviewed.
+Start with a working, signed-in **Claude Code or Codex** on your computer. This skill has no separate account or API setup. If you need the host first, follow the official [Claude Code quickstart](https://code.claude.com/docs/en/quickstart) or [Codex CLI setup](https://learn.chatgpt.com/docs/codex/cli).
 
-Clone a versioned release and install the skill for both hosts:
+Choose an installation route:
+
+- **Source installer below:** requires Git and Python 3.10 or newer. No extra Python packages are needed.
+- **[Verified ZIP](docs/releasing.md#verify-and-install-a-release):** requires a current GitHub CLI and an archive extractor, with no Git or Python required.
+
+These are local installations. For Claude Desktop, use its local **Code** mode; for Codex, use a local desktop, CLI, or IDE session. If the host runs in WSL, a container, or a remote environment, install there. Local folders are not automatically synced to web/cloud sessions or other computers.
+
+### 1. Download the source
+
+Run these commands in your **terminal**, such as Terminal on macOS/Linux or PowerShell on Windows:
 
 ```sh
 git clone --branch v0.2.0 --depth 1 https://github.com/zrack/security-audit-skill.git
 cd security-audit-skill
-python3 scripts/install.py --target both
 ```
 
-The installer uses Python's standard library and copies only the skill directory. It does not install packages, scanners, or other dependencies.
+The version tag pins the release. Git may print a normal "detached HEAD" notice when checking out a tag.
 
-The versioned checkout makes upgrades deliberate. For a verified portable ZIP that needs no installer, see [release verification and installation](docs/releasing.md#verify-and-install-a-release). Contributors can clone the default branch instead.
+### 2. Choose your host and install
 
-On Windows, use `py -3` in place of `python3` if that is how Python is installed.
+From the checkout above, run **one** command for the host you use:
 
-| Target | Personal installation |
+| Install for | macOS / Linux | Windows PowerShell |
+| --- | --- | --- |
+| Claude Code | `python3 scripts/install.py --target claude` | `py -3 scripts/install.py --target claude` |
+| Codex | `python3 scripts/install.py --target codex` | `py -3 scripts/install.py --target codex` |
+| Both hosts | `python3 scripts/install.py --target both` | `py -3 scripts/install.py --target both` |
+
+Check your Python version with `python3 --version` or `py -3 --version`; it must be 3.10 or newer. If Windows provides Python through `python` instead of `py`, use `python` in the commands above.
+
+### 3. Confirm the installation
+
+The installer prints `Installed` and the destination for each selected host. `Already installed; unchanged` also means the files are in place. The final paths should be:
+
+| Host | Required installed file |
 | --- | --- |
-| `claude` | `~/.claude/skills/security-audit` |
-| `codex` | `~/.agents/skills/security-audit` |
-| `both` | Both locations above |
+| Claude Code | `~/.claude/skills/security-audit/SKILL.md` |
+| Codex | `~/.agents/skills/security-audit/SKILL.md` |
 
-Choose one host with `--target claude` or `--target codex`. To install into a project instead:
+Here, `~` means the home directory of the account running Python, including your user profile on Windows. The installer creates missing skill folders and copies only the portable instructions, metadata, and license. It does not install scanners or change host permissions.
+
+Next, [open the host and run your first review](#use). A successful file copy and host discovery are separate checks.
+
+### Optional: install for one project
+
+Personal installations above work across your local projects. To keep the skill in just one project, run the installer from this checkout with the path to an **existing** code-project folder. Quote paths containing spaces. For example, for Codex:
 
 ```sh
-python3 scripts/install.py --target both --project /path/to/project
+python3 scripts/install.py --target codex --project "/path/to/your code project"
 ```
 
-Project installs use `.claude/skills/security-audit` and `.agents/skills/security-audit` under that project. The installer refuses to replace a different existing copy. An identical destination, or a destination already linked to this repository's skill, is left as it is.
+In Windows PowerShell:
 
-For a manual installation, copy the entire `skills/security-audit` directory to the applicable personal or project location above. Create the parent `skills` directory if needed, and use a destination that does not already exist. Compare an existing installation before replacing it; do not merge copies blindly.
+```powershell
+py -3 scripts/install.py --target codex --project "C:\path\to\your code project"
+```
 
-See the official [Claude Code skill documentation](https://code.claude.com/docs/en/skills) and [Codex skill documentation](https://learn.chatgpt.com/docs/build-skills) for host discovery and configuration.
+Replace the example path with your project and use `--target claude` for Claude Code, or `both` for both hosts. Project installs use `.claude/skills/security-audit` and/or `.agents/skills/security-audit` inside that folder. `--project .` refers to the current directory, so using it from this checkout installs into the skill repository itself.
 
-If the skill is missing from the host's skill list, start a fresh session. Codex also documents restarting the app if a new skill does not appear.
+For a manual source-checkout installation, copy the entire `skills/security-audit` folder to your chosen host's `skills` directory. For a release ZIP, copy the extracted `security-audit` folder instead; see the [ZIP steps](docs/releasing.md#verify-and-install-a-release). Use a destination that does not already exist.
 
 ### Updating an installed copy
 
@@ -64,25 +93,45 @@ Choose the next version, verify it, compare any local customizations, and back u
 
 ## Use
 
-Open Claude Code or Codex in the project you want to review, then give it a concrete target. Installing from this checkout does not make this repository the audit target.
+### Run your first review
 
-In **Claude Code**, invoke the slash command with a concrete target:
+This demo assumes a personal installation. If you installed only into a project, open that project and skip to [Review your own project](#review-your-own-project).
+
+For a quick check with included sample code, open this `security-audit-skill` checkout in your local host. In a terminal, start `claude` or `codex` from this directory; in a desktop app or IDE, select this folder and start a fresh local session.
+
+Paste the following into **Claude Code's chat**, not your terminal shell:
 
 ```text
-/security-audit Review the current working-tree changes for security issues. State the base revision, separate new issues from existing ones, and report coverage limits.
+/security-audit Review examples/review-packet.md for security issues. Use static inspection only; do not execute the sample or modify files. State the reviewed scope and any missing context.
 ```
 
-In **Codex**, invoke the skill by name:
+In **Codex CLI or the IDE extension**, type `$` and select `security-audit`, or paste this into its chat:
+
+```text
+$security-audit Review examples/review-packet.md for security issues. Use static inspection only; do not execute the sample or modify files. State the reviewed scope and any missing context.
+```
+
+In the desktop app, select **Security Audit** from the skill picker and send the same review request without the `$security-audit` prefix if that interface uses a picker instead. See the official [Codex skill guide](https://learn.chatgpt.com/docs/build-skills) for your interface.
+
+Check that the skill appears in the host's command/skill selector: type `/` in Claude Code, or use `/skills` or `$` in Codex CLI/IDE. Start a fresh session or restart Codex if it does not appear. The response should identify `examples/review-packet.md` as the target. This is a deliberately insecure, non-runnable example; compare the result with the [illustrative report](examples/review-report.md).
+
+### Review your own project
+
+Open the code project you actually want reviewed and start a session there. Give the agent a real file, change, or revision range in that project. Installing this skill does not make its source checkout the default audit target.
+
+For example, replace `src/api/uploads.ts` with an existing path in your project:
+
+```text
+/security-audit Review src/api/uploads.ts and its callers for path traversal and unsafe file handling.
+```
+
+For Codex, use `$security-audit` or its skill picker with the same request. To review uncommitted work:
 
 ```text
 $security-audit Review the current working-tree changes for security issues. State the base revision, separate new issues from existing ones, and report coverage limits.
 ```
 
-Other useful requests:
-
-```text
-/security-audit Review src/api/uploads.ts and its callers for path traversal and unsafe file handling.
-```
+If your working tree is clean, choose an existing file or a commit range instead. Dependency-review example:
 
 ```text
 $security-audit Review the dependency changes between main and HEAD. Verify current advisory claims where lookup is available, and distinguish affected versions from reachable application impact.
@@ -91,6 +140,20 @@ $security-audit Review the dependency changes between main and HEAD. Verify curr
 The skill activates for security-focused work. It is not intended to turn every implementation task or general code review into a security audit.
 
 Use your normal host permissions. Code reading, search, diffs, authorized local tests, and current advisory lookups are useful review capabilities. This skill neither grants tools nor installs tool restrictions. See [practical host permissions](docs/host-permissions.md) for choosing the scope and checking approvals without disabling useful work.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| `git` or Python command is not found | Install the prerequisite for the source route, or use the verified ZIP route. On Windows, try the installed `py -3` or `python` launcher; check for Python 3.10+. |
+| Git says the checkout directory already exists | Clone into a fresh folder; do not mix a new checkout into an existing directory. |
+| `scripts/install.py` cannot be found | Run the installer from the cloned `security-audit-skill` directory. The portable ZIP intentionally contains no installer. |
+| `Refusing to overwrite existing destination` | Compare and back up the printed destination, then rename or remove that old installation before reinstalling. With `both`, a conflict in either host prevents both installs; choose just your host when appropriate. |
+| Installed, but the skill is missing | Check the exact `SKILL.md` path above, restart the session/app, and verify you installed for the same OS account and environment the host uses. Check any managed skill restrictions. |
+| Skill folder contains another `security-audit` folder | Place the directory containing `SKILL.md` directly under `skills`, so the path ends in `skills/security-audit/SKILL.md`. Compare existing contents before moving files. |
+| Review reports no changed files | A clean working tree has no uncommitted diff. Give an existing file or an explicit commit range. |
+
+Host discovery details: [Claude Code skills](https://code.claude.com/docs/en/skills) and [Codex skills](https://learn.chatgpt.com/docs/build-skills).
 
 ## What to expect
 
