@@ -1,0 +1,239 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable version, such as v0.1.2
+        required: true
+        type: string
+      expected_sha:
+        description: Reviewed full lowercase commit SHA at main
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Validate and prepare
+    if: github.repository == 'zrack/security-audit-skill'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      - name: Check release selection before checkout
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          if os.environ['GITHUB_REF'] != 'refs/heads/main':
+              raise SystemExit('Release must be dispatched from main')
+          version = os.environ['RELEASE_VERSION']
+          expected = os.environ['EXPECTED_SHA']
+          if not re.fullmatch(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)', version):
+              raise SystemExit('Use a stable vX.Y.Z version without leading zeroes')
+          if not re.fullmatch(r'[0-9a-f]{40}', expected) or expected != os.environ['GITHUB_SHA']:
+              raise SystemExit('Expected SHA must exactly match this main workflow commit')
+          PY
+      - name: Check out selected commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.14"
+      - name: Validate package and documentation
+        run: python scripts/validate.py
+      - name: Test installation and release tooling
+        run: python -m unittest discover -s tests -v
+      - name: Prepare package, checksums, and build metadata
+        run: python scripts/prepare_release.py --version "$RELEASE_VERSION" --expected-sha "$EXPECTED_SHA"
+      - name: Upload exact release payload
+        id: upload
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-payload
+          path: |
+            dist/security-audit.zip
+            dist/SHA256SUMS
+            dist/build-metadata.json
+          if-no-files-found: error
+          retention-days: 7
+          overwrite: false
+
+  release:
+    name: Attest and publish
+    needs: build
+    if: github.repository == 'zrack/security-audit-skill' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+    steps:
+      # This job never checks out source or runs repository code.
+      - name: Download this build's exact artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          artifact-ids: ${{ needs.build.outputs.artifact_id }}
+          path: release
+          digest-mismatch: error
+      - name: Independently verify payload before signing
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import stat
+          import zipfile
+          directory = Path('release')
+          names = {'security-audit.zip', 'build-metadata.json', 'SHA256SUMS'}
+          if directory.is_symlink() or {p.name for p in directory.iterdir()} != names:
+              raise SystemExit('Unexpected release payload inventory')
+          if any(p.is_symlink() or not p.is_file() for p in directory.iterdir()):
+              raise SystemExit('Release payload must contain only regular files')
+          expected = os.environ['EXPECTED_SHA']
+          version = os.environ['RELEASE_VERSION']
+          if not re.fullmatch(r'[0-9a-f]{40}', expected) or expected != os.environ['GITHUB_SHA']:
+              raise SystemExit('Release commit mismatch')
+          if not re.fullmatch(r'v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)', version):
+              raise SystemExit('Invalid stable release version')
+          digest = lambda name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
+          checksums = ''.join(f'{digest(name)}  {name}\n' for name in sorted(names - {'SHA256SUMS'}))
+          if (directory / 'SHA256SUMS').read_text(encoding='utf-8') != checksums:
+              raise SystemExit('Release checksum mismatch')
+          metadata = json.loads((directory / 'build-metadata.json').read_text(encoding='utf-8'))
+          source = {'repository': 'zrack/security-audit-skill', 'ref': 'refs/heads/main', 'commit': expected}
+          if metadata.get('schema_version') != 1 or metadata.get('version') != version or metadata.get('source') != source:
+              raise SystemExit('Release source metadata mismatch')
+          workflow = metadata.get('workflow', {})
+          workflow_ref = 'zrack/security-audit-skill/.github/workflows/release.yml@refs/heads/main'
+          attempt = workflow.get('run_attempt', '')
+          if (workflow.get('commit') != expected or workflow.get('ref') != workflow_ref
+              or workflow.get('run_id') != os.environ['GITHUB_RUN_ID']
+              or not isinstance(attempt, str) or not re.fullmatch(r'[1-9][0-9]*', attempt)
+              or int(attempt) > int(os.environ['GITHUB_RUN_ATTEMPT'])):
+              raise SystemExit('Release workflow metadata mismatch')
+          artifact = {'name': 'security-audit.zip', 'sha256': digest('security-audit.zip'),
+                      'size': (directory / 'security-audit.zip').stat().st_size}
+          if metadata.get('artifact') != artifact:
+              raise SystemExit('Portable archive metadata mismatch')
+          with zipfile.ZipFile(directory / 'security-audit.zip') as archive:
+              portable = {'security-audit/SKILL.md', 'security-audit/agents/openai.yaml', 'security-audit/LICENSE'}
+              if len(archive.infolist()) != 3 or set(archive.namelist()) != portable or archive.testzip() is not None:
+                  raise SystemExit('Unexpected portable archive inventory or corruption')
+              if any(info.is_dir() or not stat.S_ISREG(info.external_attr >> 16) or info.flag_bits & 1
+                     for info in archive.infolist()):
+                  raise SystemExit('Portable archive must contain only unencrypted regular files')
+          print('Verified release inventory, hashes, source, workflow, and portable archive')
+          PY
+      - name: Attest portable package
+        id: attest
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: release/security-audit.zip
+          push-to-registry: false
+          create-storage-record: false
+      - name: Include provenance bundle
+        env:
+          ATTESTATION_BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+        run: cp -- "$ATTESTATION_BUNDLE" release/security-audit.intoto.jsonl
+      - name: Stage assets, publish, and check immutability
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          repository = 'zrack/security-audit-skill'
+          base = f'repos/{repository}'
+          version = os.environ['RELEASE_VERSION']
+          expected = os.environ['EXPECTED_SHA']
+          directory = Path('release')
+          names = {'security-audit.zip', 'build-metadata.json', 'SHA256SUMS', 'security-audit.intoto.jsonl'}
+          if {p.name for p in directory.iterdir()} != names or any(p.is_symlink() or not p.is_file() for p in directory.iterdir()):
+              raise SystemExit('Unexpected final release asset inventory')
+          def gh(*arguments, payload=None):
+              result = subprocess.run(['gh', *arguments], input=None if payload is None else json.dumps(payload),
+                                      text=True, capture_output=True)
+              if result.returncode:
+                  raise SystemExit(result.stderr.strip() or 'GitHub command failed')
+              return result.stdout
+          def api(path, payload=None):
+              arguments = ['api', path, '-H', 'X-GitHub-Api-Version: 2026-03-10']
+              if payload is not None:
+                  arguments += ['--method', 'POST', '--input', '-']
+              return json.loads(gh(*arguments, payload=payload))
+          pages = json.loads(gh('api', f'{base}/releases?per_page=100', '--paginate', '--slurp'))
+          if any(release['tag_name'] == version for page in pages for release in page):
+              raise SystemExit('This version already has a release or draft. Inspect it and finish recovery manually; assets will never be overwritten. See docs/releasing.md.')
+          def check_tag(create=False):
+              refs = api(f'{base}/git/matching-refs/tags/{version}')
+              matches = [ref for ref in refs if ref['ref'] == f'refs/tags/{version}']
+              if not matches and create:
+                  matches = [api(f'{base}/git/refs', {'ref': f'refs/tags/{version}', 'sha': expected})]
+              if len(matches) != 1:
+                  raise SystemExit('Version tag is missing or ambiguous')
+              target = matches[0]['object']
+              for _ in range(10):
+                  if target['type'] != 'tag':
+                      break
+                  target = api(f"{base}/git/tags/{target['sha']}")['object']
+              if target['type'] != 'commit' or target['sha'] != expected:
+                  raise SystemExit('Version tag does not resolve to the selected commit; it will not be moved')
+          assets = {name: {'digest': 'sha256:' + hashlib.sha256((directory / name).read_bytes()).hexdigest(),
+                           'size': (directory / name).stat().st_size} for name in names}
+          check_tag(create=True)
+          notes = (f'Portable Security Audit skill {version}.\n\nSource commit: {expected}\n'
+                   f'Build: https://github.com/{repository}/actions/runs/{os.environ["GITHUB_RUN_ID"]}\n\n'
+                   'Verify the release, package provenance, and downloaded asset before installation; see docs/releasing.md.\n')
+          notes_file = Path(os.environ['RUNNER_TEMP']) / 'security-audit-release-notes.txt'
+          notes_file.write_text(notes, encoding='utf-8')
+          gh('release', 'create', version, '--repo', repository, '--verify-tag', '--target', expected,
+             '--draft', '--title', version, '--notes-file', str(notes_file),
+             *(str(directory / name) for name in sorted(names)))
+          pages = json.loads(gh('api', f'{base}/releases?per_page=100', '--paginate', '--slurp'))
+          releases = [release for page in pages for release in page if release['tag_name'] == version]
+          if len(releases) != 1 or releases[0]['draft'] is not True:
+              raise SystemExit('Expected exactly one unpublished draft')
+          release = releases[0]
+          def check_assets(release_id):
+              remote = api(f'{base}/releases/{release_id}/assets?per_page=100')
+              if len(remote) != len(names) or {asset['name'] for asset in remote} != names:
+                  raise SystemExit('Draft asset inventory mismatch; draft remains unpublished')
+              if any(asset['state'] != 'uploaded' or asset.get('digest') != assets[asset['name']]['digest']
+                     or asset['size'] != assets[asset['name']]['size'] for asset in remote):
+                  raise SystemExit('Release asset digest or size mismatch')
+          if release['target_commitish'] != expected:
+              raise SystemExit('Draft target commit mismatch')
+          check_assets(release['id'])
+          check_tag()
+          gh('release', 'edit', version, '--repo', repository, '--draft=false', '--latest')
+          published = api(f"{base}/releases/{release['id']}")
+          if published.get('draft') is not False or published.get('immutable') is not True:
+              raise SystemExit('Publication did not produce an immutable release. Inspect repository settings and the published release; this workflow will not delete or replace it.')
+          check_assets(release['id'])
+          check_tag()
+          print(f'Published immutable release {version} from {expected}')
+          PY
