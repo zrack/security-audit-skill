@@ -27,7 +27,8 @@ BASE = "repos/zrack/security-audit-skill"
 class OfflineGitHub:
     """Small stateful service fixture; no publisher decisions are implemented here."""
 
-    def __init__(self, *, tag_sha=None, releases=None, corrupt=None, immutable=True):
+    def __init__(self, *, tag_sha=None, releases=None, corrupt=None, immutable=True,
+                 post_create_listings=None):
         self.tag_sha = tag_sha
         self.releases = [] if releases is None else releases
         self.corrupt = corrupt
@@ -37,6 +38,7 @@ class OfflineGitHub:
         self.writes = []
         self.created_files = []
         self.notes = ""
+        self.post_create_listings = [] if post_create_listings is None else list(post_create_listings)
 
     def run(self, command, *, input, text, capture_output):
         if command[0] != "gh" or text is not True or capture_output is not True:
@@ -46,7 +48,10 @@ class OfflineGitHub:
         if command[1] == "api":
             path = command[2]
             if path == f"{BASE}/releases?per_page=100":
-                response = [self.releases]
+                if "create-draft" in self.writes and self.post_create_listings:
+                    response = [self.post_create_listings.pop(0)]
+                else:
+                    response = [self.releases]
             elif path == f"{BASE}/git/matching-refs/tags/{VERSION}":
                 response = [] if self.tag_sha is None else [{
                     "ref": f"refs/tags/{VERSION}", "object": {"type": "commit", "sha": self.tag_sha},
@@ -104,7 +109,9 @@ class ReleasePublisherTests(unittest.TestCase):
         try:
             os.chdir(self.root)
             with patch.dict(os.environ, environment, clear=True), \
-                    patch("subprocess.run", side_effect=service.run), redirect_stdout(io.StringIO()) as output:
+                    patch("subprocess.run", side_effect=service.run), \
+                    patch("time.sleep") as sleep, redirect_stdout(io.StringIO()) as output:
+                self.sleep = sleep
                 exec(PUBLISHER, {"__name__": "offline_release_publisher"})
             return output.getvalue()
         finally:
@@ -137,7 +144,42 @@ class ReleasePublisherTests(unittest.TestCase):
         self.assertIn(f"Published immutable release {VERSION} from {COMMIT}", output)
         self.assertEqual(sum(command[2] == f"{BASE}/releases/123/assets?per_page=100"
                              for command, _ in service.calls), 2)
+        self.sleep.assert_not_called()
         self.assert_no_replacement(service)
+
+    def test_delayed_draft_visibility_retries_reads_without_repeating_writes(self):
+        service = OfflineGitHub(post_create_listings=[[], []])
+        output = self.execute(service)
+        self.assertEqual(service.writes, ["create-tag", "create-draft", "publish"])
+        self.assertEqual([call.args for call in self.sleep.call_args_list], [(1,), (2,)])
+        self.assertEqual(sum(command[2] == f"{BASE}/releases?per_page=100"
+                             for command, _ in service.calls), 4)
+        self.assertIn(f"Published immutable release {VERSION} from {COMMIT}", output)
+        self.assert_no_replacement(service)
+
+    def test_missing_draft_stops_after_bounded_read_retries(self):
+        service = OfflineGitHub(post_create_listings=[[]] * 5)
+        with self.assertRaisesRegex(SystemExit, "Expected exactly one unpublished draft"):
+            self.execute(service)
+        self.assertEqual(service.writes, ["create-tag", "create-draft"])
+        self.assertEqual([call.args for call in self.sleep.call_args_list], [(1,), (2,), (4,), (8,)])
+        self.assertEqual(sum(command[2] == f"{BASE}/releases?per_page=100"
+                             for command, _ in service.calls), 6)
+        self.assertTrue(service.releases[0]["draft"])
+        self.assert_no_replacement(service)
+
+    def test_multiple_or_published_matches_fail_without_read_retries(self):
+        draft = {"id": 123, "tag_name": VERSION, "draft": True, "target_commitish": COMMIT}
+        for listing in ([draft, {**draft, "id": 124}], [{**draft, "draft": False}]):
+            with self.subTest(listing=listing):
+                service = OfflineGitHub(post_create_listings=[listing])
+                with self.assertRaisesRegex(SystemExit, "Expected exactly one unpublished draft"):
+                    self.execute(service)
+                self.assertEqual(service.writes, ["create-tag", "create-draft"])
+                self.sleep.assert_not_called()
+                self.assertEqual(sum(command[2] == f"{BASE}/releases?per_page=100"
+                                     for command, _ in service.calls), 2)
+                self.assert_no_replacement(service)
 
     def test_existing_draft_refuses_before_any_write(self):
         service = OfflineGitHub(releases=[{"id": 123, "tag_name": VERSION, "draft": True}])
