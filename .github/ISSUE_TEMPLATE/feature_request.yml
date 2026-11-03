@@ -1,0 +1,21 @@
+name: Improvement request
+description: Propose a focused improvement to the review method or tools.
+title: "[Improvement] "
+body:
+  - type: markdown
+    attributes:
+      value: Please use synthetic examples and leave out credentials, private findings, and private source code.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe a concrete review or installation scenario.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the change and how you would tell whether it helps. Mention host compatibility or false-positive risks when relevant.
+    validations:
+      required: true

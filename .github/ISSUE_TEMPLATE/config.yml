@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/zrack/security-audit-skill/security/advisories/new
+    about: Use private reporting for vulnerabilities in this repository. Do not post secrets or private findings in public issues.

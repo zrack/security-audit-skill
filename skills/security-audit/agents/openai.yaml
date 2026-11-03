@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Audit"
+  short_description: "Evidence-backed security review for code and changes"
+  default_prompt: "Use $security-audit to review the supplied code or changes and report supported security issues, fixes, and coverage limits."

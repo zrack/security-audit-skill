@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="950" viewBox="0 0 1080 950" role="img" aria-labelledby="title description">
+  <title id="title">Security Audit: a shared, evidence-led review method</title>
+  <desc id="description">Claude Code and OpenAI Codex can use the same security-audit skill with their own tools. The four review stages are: scope the target and revision; trace attacker-controlled inputs and trust boundaries; check controls and counterevidence; and report evidence, impact, a fix, verification, and coverage limits. Severity describes supported impact. Confidence describes the strength of the evidence. Candidates missing essential facts belong under Needs validation, separate from substantiated findings. Results apply only to the reviewed scope.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#132238"/>
+      <stop offset="1" stop-color="#0c1626"/>
+    </linearGradient>
+    <linearGradient id="track" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#79e0c8"/>
+      <stop offset="1" stop-color="#3d8f91"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 5.5 3.5 1 6" fill="none" stroke="#79e0c8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+      .ink { fill: #f3f7fc; }
+      .muted { fill: #b7c7dc; }
+      .accent { fill: #79e0c8; }
+      .body { font-size: 18px; }
+      .stage { font-size: 23px; font-weight: 650; letter-spacing: -0.4px; }
+      .small { font-size: 15px; }
+    </style>
+  </defs>
+
+  <rect width="1080" height="950" rx="24" fill="url(#background)"/>
+  <path d="M48 42H90" stroke="#79e0c8" stroke-width="3" stroke-linecap="round"/>
+  <text x="104" y="47" class="accent" font-size="13" font-weight="700" letter-spacing="2">SECURITY AUDIT · AGENT SKILL</text>
+
+  <text x="48" y="111" class="ink" font-size="52" font-weight="700" letter-spacing="-1.8">Security review,</text>
+  <text x="48" y="169" class="ink" font-size="52" font-weight="700" letter-spacing="-1.8">grounded in evidence.</text>
+  <text x="50" y="210" class="muted" font-size="21">A reusable method for code, diffs, and dependency changes.</text>
+
+  <!-- The clients share a method; the host supplies tools and workflow. -->
+  <rect x="48" y="246" width="984" height="64" rx="14" fill="#192a40" stroke="#304359"/>
+  <text x="80" y="285" class="ink" font-size="20" font-weight="600">Claude Code</text>
+  <path d="M260 278H412" fill="none" stroke="#79e0c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="432" y="258" width="216" height="40" rx="8" fill="#24463f" stroke="#4a8c7d"/>
+  <text x="540" y="284" text-anchor="middle" class="accent" font-size="19" font-weight="650">security-audit</text>
+  <path d="M820 278H668" fill="none" stroke="#79e0c8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="1000" y="285" text-anchor="end" class="ink" font-size="20" font-weight="600">OpenAI Codex</text>
+  <text x="540" y="334" text-anchor="middle" class="muted small">One shared skill · Host-native tools · Existing workflows respected</text>
+
+  <!-- A continuous track keeps the four stages in reading order. -->
+  <path d="M80 393V670" fill="none" stroke="url(#track)" stroke-width="2"/>
+
+  <rect x="118" y="364" width="914" height="74" rx="12" fill="#17263a" stroke="#2b3c52"/>
+  <circle cx="80" cy="401" r="23" fill="#183c3c" stroke="#79e0c8" stroke-width="1.5"/>
+  <text x="80" y="407" text-anchor="middle" class="accent" font-size="16" font-weight="700">01</text>
+  <text x="144" y="409" class="ink stage">Scope</text>
+  <path d="M410 385V417" stroke="#30445b"/>
+  <text x="438" y="395" class="muted body">Set the target, revision, and review boundary.</text>
+  <text x="438" y="420" class="muted body">Record the assumptions that matter.</text>
+
+  <rect x="118" y="453" width="914" height="74" rx="12" fill="#17263a" stroke="#2b3c52"/>
+  <circle cx="80" cy="490" r="23" fill="#183c3c" stroke="#79e0c8" stroke-width="1.5"/>
+  <text x="80" y="496" text-anchor="middle" class="accent" font-size="16" font-weight="700">02</text>
+  <text x="144" y="483" class="ink stage">Trace input</text>
+  <text x="144" y="511" class="ink stage">&amp; trust</text>
+  <path d="M410 474V506" stroke="#30445b"/>
+  <text x="438" y="484" class="muted body">Follow untrusted input to sensitive actions.</text>
+  <text x="438" y="509" class="muted body">Map assets, privileges, and trust boundaries.</text>
+
+  <rect x="118" y="542" width="914" height="74" rx="12" fill="#17263a" stroke="#2b3c52"/>
+  <circle cx="80" cy="579" r="23" fill="#183c3c" stroke="#79e0c8" stroke-width="1.5"/>
+  <text x="80" y="585" text-anchor="middle" class="accent" font-size="16" font-weight="700">03</text>
+  <text x="144" y="587" class="ink stage">Check controls</text>
+  <path d="M410 563V595" stroke="#30445b"/>
+  <text x="438" y="573" class="muted body">Inspect defenses and seek counterevidence.</text>
+  <text x="438" y="598" class="muted body">Establish a reachable security failure.</text>
+
+  <rect x="118" y="631" width="914" height="74" rx="12" fill="#17263a" stroke="#2b3c52"/>
+  <circle cx="80" cy="668" r="23" fill="#183c3c" stroke="#79e0c8" stroke-width="1.5"/>
+  <text x="80" y="674" text-anchor="middle" class="accent" font-size="16" font-weight="700">04</text>
+  <text x="144" y="676" class="ink stage">Report</text>
+  <path d="M410 652V684" stroke="#30445b"/>
+  <text x="438" y="662" class="muted body">Give evidence, impact, fix, and verification.</text>
+  <text x="438" y="687" class="muted body">State coverage, omissions, and validation limits.</text>
+
+  <text x="48" y="751" class="ink" font-size="21" font-weight="650" letter-spacing="-0.3">Two judgments. Keep them separate.</text>
+  <rect x="48" y="770" width="480" height="76" rx="12" fill="#192a40"/>
+  <rect x="552" y="770" width="480" height="76" rx="12" fill="#192a40"/>
+  <text x="70" y="800" class="accent" font-size="18" font-weight="700">Severity</text>
+  <text x="70" y="826" class="muted" font-size="17">Supported impact, exposure, and prerequisites.</text>
+  <text x="574" y="800" class="accent" font-size="18" font-weight="700">Confidence</text>
+  <text x="574" y="826" class="muted" font-size="17">Evidence strength and material assumptions.</text>
+
+  <rect x="48" y="864" width="984" height="48" rx="10" fill="#342e27" stroke="#68563e"/>
+  <circle cx="72" cy="888" r="4" fill="#e9bc79"/>
+  <text x="88" y="894" fill="#f1cb95" font-size="17" font-weight="650">Needs validation ≠ finding</text>
+  <text x="332" y="894" fill="#d9ccba" font-size="17">Essential facts missing? Name the gap and the next check.</text>
+  <text x="1030" y="936" text-anchor="end" class="muted" font-size="13">Results apply to the reviewed scope. No guarantee of complete detection.</text>
+</svg>

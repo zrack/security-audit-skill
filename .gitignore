@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+.env
+.env.*
+*.pem
+*.key
+.pytest_cache/
+.coverage
+htmlcov/
+graphify-out/
