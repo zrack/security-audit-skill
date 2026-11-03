@@ -110,6 +110,7 @@ security-audit-skill/
 │   ├── review-packet.md         # Synthetic code and review context
 │   └── review-report.md         # Synthetic report example
 ├── docs/validation.md           # Compatibility and validation record
+├── evals/                       # Manual behavioral packets and rubric
 ├── scripts/
 │   ├── install.py               # Personal or project installation
 │   ├── validate.py              # Structural checks
@@ -147,6 +148,6 @@ This is an instruction-only skill, not an audit service or a guarantee that vuln
 
 The skill does not authorize running untrusted code, using discovered credentials, probing services, publishing findings, or implementing fixes. Those actions require authorization from the conversation and any governing workflow.
 
-Validation to date consists of structural checks and five synthetic Codex subagent reviews. There has been no live Claude Code runtime validation and no effectiveness benchmark. Synthetic review results do not establish real-world detection rates or host parity.
+Validation includes structural checks, synthetic Codex subagent reviews, and live Claude Code desktop runs that confirmed native skill invocation. The live tests also exposed factual and severity-calibration limits; the skill's evidence checks were strengthened and rechecked. See the [validation record](docs/claude-code-validation.md) and [reusable evaluation packets](evals/README.md). These checks are not an effectiveness benchmark and do not establish detection rates or identical behavior across hosts.
 
 Created by Scott Zeitner. Released under the [MIT license](LICENSE).
