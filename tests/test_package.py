@@ -33,7 +33,7 @@ class PackageTests(unittest.TestCase):
                 "security-audit/agents/openai.yaml",
                 "security-audit/LICENSE",
             })
-            self.assertEqual(archive.read("security-audit/LICENSE"), b"MIT notice\n")
+            self.assertEqual(archive.read("security-audit/LICENSE"), (self.root / "LICENSE").read_bytes())
 
     def test_repeated_build_is_reproducible(self):
         first = build_package(self.root).read_bytes()

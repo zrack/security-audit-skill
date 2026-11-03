@@ -102,7 +102,8 @@ See the [synthetic example report](examples/review-report.md) for the expected f
 security-audit-skill/
 ├── skills/security-audit/
 │   ├── SKILL.md                 # Portable review instructions
-│   └── agents/openai.yaml       # Codex display metadata and default prompt
+│   ├── agents/openai.yaml        # Codex display metadata and default prompt
+│   └── LICENSE                  # MIT notice retained in portable installs
 ├── assets/
 │   └── security-audit-workflow.svg
 ├── examples/

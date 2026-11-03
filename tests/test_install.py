@@ -175,12 +175,13 @@ class InstallerTests(unittest.TestCase):
         destination = self.destination("codex")
         missing = self.root / "missing-checkout"
         self.symlink(destination, missing)
+        original_link = os.readlink(destination)
 
         with self.assertRaises(installer.InstallError):
             self.run_install()
 
         self.assertTrue(destination.is_symlink())
-        self.assertEqual(os.readlink(destination), str(missing))
+        self.assertEqual(os.readlink(destination), original_link)
         self.assertFalse((self.home / ".claude").exists())
 
     def test_symlinks_inside_installed_folder_are_not_treated_as_identical(self) -> None:
