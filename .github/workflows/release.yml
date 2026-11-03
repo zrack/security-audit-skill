@@ -166,6 +166,7 @@ jobs:
           import os
           from pathlib import Path
           import subprocess
+          import time
           repository = 'zrack/security-audit-skill'
           base = f'repos/{repository}'
           version = os.environ['RELEASE_VERSION']
@@ -213,10 +214,15 @@ jobs:
           gh('release', 'create', version, '--repo', repository, '--verify-tag', '--target', expected,
              '--draft', '--title', version, '--notes-file', str(notes_file),
              *(str(directory / name) for name in sorted(names)))
-          pages = json.loads(gh('api', f'{base}/releases?per_page=100', '--paginate', '--slurp'))
-          releases = [release for page in pages for release in page if release['tag_name'] == version]
-          if len(releases) != 1 or releases[0]['draft'] is not True:
-              raise SystemExit('Expected exactly one unpublished draft')
+          for attempt in range(5):
+              pages = json.loads(gh('api', f'{base}/releases?per_page=100', '--paginate', '--slurp'))
+              releases = [release for page in pages for release in page if release['tag_name'] == version]
+              if len(releases) == 1 and releases[0]['draft'] is True:
+                  break
+              if releases or attempt == 4:
+                  raise SystemExit('Expected exactly one unpublished draft')
+              # A successful create may briefly precede visibility in release listings.
+              time.sleep(2 ** attempt)
           release = releases[0]
           def check_assets(release_id):
               remote = api(f'{base}/releases/{release_id}/assets?per_page=100')
