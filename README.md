@@ -24,15 +24,17 @@ A suspicious pattern starts an investigation. It does not automatically become a
 
 You need Git and Python 3.10 or newer. The skill itself requires an installed Claude Code or Codex host, with access to the code you want reviewed.
 
-Clone the repository and install the skill for both hosts:
+Clone a versioned release and install the skill for both hosts:
 
 ```sh
-git clone https://github.com/zrack/security-audit-skill.git
+git clone --branch v0.2.0 --depth 1 https://github.com/zrack/security-audit-skill.git
 cd security-audit-skill
 python3 scripts/install.py --target both
 ```
 
 The installer uses Python's standard library and copies only the skill directory. It does not install packages, scanners, or other dependencies.
+
+The versioned checkout makes upgrades deliberate. For a verified portable ZIP that needs no installer, see [release verification and installation](docs/releasing.md#verify-and-install-a-release). Contributors can clone the default branch instead.
 
 On Windows, use `py -3` in place of `python3` if that is how Python is installed.
 
@@ -58,7 +60,7 @@ If the skill is missing from the host's skill list, start a fresh session. Codex
 
 ### Updating an installed copy
 
-Run `git pull` in this checkout, compare any local customizations, and back up the existing installed folder before replacing it. Rename or remove that old skill folder yourself, then rerun the installer. The installer leaves a different existing version untouched. A deliberate symlink installation follows the checkout directly; see [compatibility notes](docs/validation.md).
+Choose the next version, verify it, compare any local customizations, and back up the installed folder before replacing it. Use a fresh versioned checkout for the installer above. Rename or remove the old skill folder yourself, then rerun the installer. The installer leaves a different existing version untouched. A deliberate symlink installation follows checkout edits and updates immediately; use it when you want that development workflow. See [compatibility notes](docs/validation.md) and the [release guide](docs/releasing.md).
 
 ## Use
 
@@ -88,6 +90,8 @@ $security-audit Review the dependency changes between main and HEAD. Verify curr
 
 The skill activates for security-focused work. It is not intended to turn every implementation task or general code review into a security audit.
 
+Use your normal host permissions. Code reading, search, diffs, authorized local tests, and current advisory lookups are useful review capabilities. This skill neither grants tools nor installs tool restrictions. See [practical host permissions](docs/host-permissions.md) for choosing the scope and checking approvals without disabling useful work.
+
 ## What to expect
 
 A report records the reviewed target and revision, the evidence actually examined, and the limits of the review. Findings include severity, confidence, location, impact, relevant prerequisites, a concrete fix, and a verification step. Unresolved candidates explain the missing evidence and a bounded next check.
@@ -110,6 +114,8 @@ security-audit-skill/
 │   ├── review-packet.md         # Synthetic code and review context
 │   └── review-report.md         # Synthetic report example
 ├── docs/validation.md           # Compatibility and validation record
+├── docs/host-permissions.md     # Useful tools, host controls, and permission checks
+├── docs/releasing.md            # Verified installation and maintainer release process
 ├── evals/                       # Manual behavioral packets and rubric
 ├── scripts/
 │   ├── install.py               # Personal or project installation
@@ -149,5 +155,7 @@ This is an instruction-only skill, not an audit service or a guarantee that vuln
 The skill does not authorize running untrusted code, using discovered credentials, probing services, publishing findings, or implementing fixes. Those actions require authorization from the conversation and any governing workflow.
 
 Validation includes structural checks, synthetic Codex subagent reviews, and live Claude Code desktop runs that confirmed native skill invocation. The live tests also exposed factual and severity-calibration limits; the skill's evidence checks were strengthened and rechecked. See the [validation record](docs/claude-code-validation.md) and [reusable evaluation packets](evals/README.md). These checks are not an effectiveness benchmark and do not establish detection rates or identical behavior across hosts.
+
+Release hardening adds an explicit source-commit check, separate build and publication jobs, build provenance, and verification instructions. These controls establish the origin of a release; they do not certify the security of reviewed code. The [release guide](docs/releasing.md) describes the required GitHub controls and recovery procedure.
 
 Created by Scott Zeitner. Released under the [MIT license](LICENSE).

@@ -57,7 +57,9 @@ def validate(repository: Path) -> list[str]:
         "skills/security-audit/agents/openai.yaml",
         "assets/security-audit-workflow.svg", "docs/validation.md",
         "examples/review-packet.md", "examples/review-report.md",
-        "scripts/install.py", "scripts/package.py", ".github/workflows/validate.yml",
+        "scripts/install.py", "scripts/package.py", "scripts/prepare_release.py",
+        ".github/workflows/validate.yml", ".github/workflows/release.yml",
+        "docs/host-permissions.md", "docs/releasing.md",
     ]
     for relative in required:
         path = root / relative

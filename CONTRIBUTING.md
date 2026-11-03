@@ -32,6 +32,8 @@ For instruction changes, include a small synthetic example showing the expected 
 
 Update examples or documentation when behavior changes. Tests should exercise meaningful tooling behavior; avoid tests that merely repeat the instructions as assertions.
 
+Release maintainers should follow the [release guide](docs/releasing.md). Publication uses a manually selected, reviewed `main` commit; ordinary pull-request CI keeps read-only permissions. Host permission changes are separate from portable skill instructions; see [host permissions](docs/host-permissions.md).
+
 ## Open a pull request
 
 Describe the problem, the resulting behavior, and how you checked it. Note any compatibility or validation limits. Contributions are accepted under the repository's [MIT license](LICENSE); no separate contributor license agreement is required.
