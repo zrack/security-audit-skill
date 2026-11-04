@@ -48,7 +48,7 @@ def _relative(value: str, *, dot: bool = False) -> Path:
     if not isinstance(value, str) or not value or "\\" in value:
         raise EvaluationError("Use a nonempty relative POSIX path")
     path = Path(value)
-    if path.is_absolute() or PureWindowsPath(value).drive or ".." in path.parts or (path == Path(".") and not dot):
+    if value.startswith("/") or path.is_absolute() or PureWindowsPath(value).drive or ".." in path.parts or (path == Path(".") and not dot):
         raise EvaluationError(f"Unsafe relative path: {value}")
     return path
 
@@ -177,7 +177,8 @@ def prepare(repository: Path, case_id: str, host: str, run: Path) -> dict[str, A
         destination.write_bytes(content)
     prefix = "/security-audit" if host == "claude" else "$security-audit"
     prompt = prefix + " " + case["prompt"].strip() + "\n"
-    (run / "prompt.txt").write_text(prompt, encoding="utf-8")
+    prompt_bytes = prompt.encode("utf-8")
+    (run / "prompt.txt").write_bytes(prompt_bytes)
     manifest = {
         "schema_version": 1,
         "run_id": run.name,
@@ -189,7 +190,7 @@ def prepare(repository: Path, case_id: str, host: str, run: Path) -> dict[str, A
         "source_revision": _git(repository, "rev-parse", "HEAD"),
         "source_working_tree": _git(repository, "status", "--porcelain"),
         "suite_sha256": digest((repository / "evals/suite.json").read_bytes()),
-        "prompt_sha256": digest(prompt.encode()),
+        "prompt_sha256": digest(prompt_bytes),
         "input_sha256": {path.as_posix(): digest(content) for path, content in inputs.items()},
         "skill_sha256": {name: digest(content) for name, content in skill.items()},
         "before": snapshot(workspace),

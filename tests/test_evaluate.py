@@ -56,15 +56,22 @@ class EvaluationTests(unittest.TestCase):
         return record(self.run, **values)
 
     def test_preparation_isolated_and_binds_inputs_without_truth(self):
+        packet = self.repository / "evals/cases/sample/packet.md"
+        packet.write_bytes(b"Synthetic reviewer input\r\n")
         manifest = self.prepare()
         workspace = self.run / "workspace"
         self.assertEqual((workspace / "packet.md").read_text(), "Synthetic reviewer input\n")
+        self.assertEqual((workspace / "packet.md").read_bytes(), packet.read_bytes())
         self.assertEqual((workspace / ".agents/skills/security-audit/SKILL.md").read_text(), "Synthetic skill\n")
         self.assertFalse(list(workspace.rglob("rubric.md")))
         self.assertFalse(list(workspace.rglob("suite.json")))
         self.assertEqual(set(manifest["input_sha256"]), {"packet.md"})
-        self.assertEqual(manifest["skill_sha256"]["SKILL.md"], digest(b"Synthetic skill\n"))
+        self.assertEqual(manifest["input_sha256"]["packet.md"], digest(packet.read_bytes()))
+        self.assertEqual(manifest["skill_sha256"]["SKILL.md"], digest((self.repository / "skills/security-audit/SKILL.md").read_bytes()))
         self.assertTrue((self.run / "prompt.txt").read_text().startswith("$security-audit "))
+        prompt_bytes = (self.run / "prompt.txt").read_bytes()
+        self.assertEqual(manifest["prompt_sha256"], digest(prompt_bytes))
+        self.assertNotIn(b"\r\n", prompt_bytes)
         self.assertTrue(check(self.run)["matching"])
 
     def test_list_validates_real_sources_without_preparing_a_run(self):
@@ -267,7 +274,7 @@ class EvaluationTests(unittest.TestCase):
             self.assertEqual(result[name], manifest[name])
         rendered = matrix([self.run], self.base / "bound")[0]
         self.assertEqual(rendered["provenance_binding"], "manifest-sha256")
-        self.assertEqual(rendered["input_sha256"], {"packet.md": digest(b"Synthetic reviewer input\n")})
+        self.assertEqual(rendered["input_sha256"], {"packet.md": digest((self.repository / "evals/cases/sample/packet.md").read_bytes())})
 
     def test_changed_manifest_or_result_context_cannot_rebind_evidence(self):
         self.prepare()
