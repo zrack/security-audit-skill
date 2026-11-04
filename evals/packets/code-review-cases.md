@@ -37,7 +37,8 @@ def dns():
 
 # Deployment contract: public internet service; ordinary accounts are available
 # by self-registration. Every authenticated account reaches both routes.
-# db is a standard SQLite connection; no database row policy or proxy guard exists.
+# db is a standard SQLite connection with row_factory=sqlite3.Row, so fetched rows
+# support dict(row). No database row policy or proxy guard exists.
 ```
 
 ## Sample B: api.py
@@ -83,7 +84,8 @@ def status():
     return response
 
 # Deployment contract: session key is external, cookies are secure/HttpOnly,
-# sessions cannot be forged, and db is standard SQLite. All routes are rate
+# sessions cannot be forged, and db is a standard SQLite connection configured
+# with row_factory=sqlite3.Row, so fetched rows support dict(row). All routes are rate
 # limited by the edge proxy to 5 requests/minute/account, with concurrency caps.
 # DNS egress is restricted by the host, and resolved names return no internal
 # records. Public status contains only the literal value above.

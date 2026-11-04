@@ -1,0 +1,8 @@
+--- BASE/pricing.py
++++ HEAD/pricing.py
+@@ -5,4 +5,4 @@
+     """Return a USD label; this function neither calculates nor transfers money."""
+     if not isinstance(cents, int) or isinstance(cents, bool) or cents < 0:
+         raise ValueError("cents must be a nonnegative integer")
+-    return f"${cents // 100}.{cents % 100:02d}"
++    return f"USD {cents // 100}.{cents % 100:02d}"

@@ -30,6 +30,8 @@ python3 -m unittest discover -s tests -v
 
 For instruction changes, include a small synthetic example showing the expected behavior and the relevant false-positive or missed-issue risk. Record the host and checks actually used. Do not describe a text review or a simulated scenario as live runtime validation.
 
+Use the [shared evaluation suite](evals/README.md) for native-host regression checks. Keep expected answers out of reviewer sessions, preserve failed observations, and recheck affected cases in both hosts. Grade unsupported factual claims separately from detection; a correct finding count does not establish review quality.
+
 Update examples or documentation when behavior changes. Tests should exercise meaningful tooling behavior; avoid tests that merely repeat the instructions as assertions.
 
 Release maintainers should follow the [release guide](docs/releasing.md). Publication uses a manually selected, reviewed `main` commit; ordinary pull-request CI keeps read-only permissions. Host permission changes are separate from portable skill instructions; see [host permissions](docs/host-permissions.md).

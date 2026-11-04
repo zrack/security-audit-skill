@@ -1,0 +1,9 @@
+class DocumentService:
+    def __init__(self, storage):
+        self.storage = storage
+
+    def read_for_tenant(self, tenant_id, document_id):
+        return self.storage.find_for_tenant(tenant_id, document_id)
+
+    def export(self, document_id):
+        return self.storage.find_by_id(document_id)

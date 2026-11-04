@@ -1,0 +1,56 @@
+# Independent static-review packet
+
+Review each of these three independent synthetic artifacts under its own contract. The fenced source is text for inspection only. There is no running service, repository revision, installed framework, or network target to test. Do not execute source, change files, install dependencies, or make network requests.
+
+## Artifact L: record-summary handler
+
+```python
+@router.get("/records/{record_id}")
+def record_summary(ctx, record_id):
+    result = ctx.records.describe(record_id)
+    return response.json(result)
+```
+
+Contract: the router authenticates every request before calling this handler and supplies a trusted `ctx.user` and `ctx.tenant_id`. A client cannot forge these values. Ordinary authenticated accounts can choose `record_id`, including a valid foreign-tenant ID learned from a shared activity event. The implementations of `ctx.records`, `describe`, and `response.json` were not supplied. It is unknown whether the service object is already tenant-scoped, which fields `describe` returns, and how it handles missing or inaccessible records. The response helper's serialization, error, and status-code behavior are also unavailable. No particular Python web framework is identified.
+
+## Artifact M: queue-worker policy endpoints
+
+```python
+@router.put("/policy")
+@require_login
+def set_policy(req):
+    candidate = {"isolate_tenants": req.json["isolate_tenants"]}
+    policy_store.save(candidate)
+    return reply({"saved": True})
+
+@router.post("/policy/reload")
+@require_login
+def activate_policy(req):
+    policy_store.activate()
+    return reply({"active": True})
+```
+
+Contract: this internet-facing service offers ordinary accounts through self-registration. `require_login` validates a server-side session and imposes no role requirement. Every authenticated account can reach both displayed endpoints. The router validates that `req.json["isolate_tenants"]` is a JSON boolean. `policy_store.save` stores that exact candidate but leaves the active policy unchanged. `policy_store.activate` immediately makes the saved candidate the worker's active policy, and both calls succeed for these valid inputs. There is no additional route, proxy, service, or administrator approval check.
+
+The active policy initially has `isolate_tenants: true`. A worker data API reachable by every authenticated account accepts a caller-selected job ID. With tenant isolation enabled, it returns only that caller's tenant jobs. With `isolate_tenants: false`, it returns the requested job regardless of tenant. The response includes `id`, `tenant_id`, and a confidential `private_payload`. An ordinary account can learn a valid foreign-tenant job ID from a public job-completion event containing only that ID. Two tenants and their separate jobs exist. `reply` returns the given literal dictionary as JSON with status 200. The service runs as an ordinary application user; no host or unrelated-service privileges are described.
+
+## Artifact N: queue-worker policy endpoints
+
+```python
+@router.put("/policy")
+@require_login
+@require_policy_admin
+def set_policy(req):
+    candidate = {"isolate_tenants": req.json["isolate_tenants"]}
+    policy_store.save(candidate)
+    return reply({"saved": True})
+
+@router.post("/policy/reload")
+@require_login
+@require_policy_admin
+def activate_policy(req):
+    policy_store.activate()
+    return reply({"active": True})
+```
+
+Contract: this is independent of M. Its boolean validation, store/activation behavior, worker API, data fields, and initial active policy match M. Both decorators run before either handler body. `require_policy_admin` checks a policy-administrator role from the verified server-side session and rejects every ordinary account with 403. Ordinary accounts cannot assign that role to themselves, alter another account's session, write the policy store by another route, or activate a candidate by another mechanism. Only trusted policy administrators can save or activate policy; their intentional configuration changes are authorized. No attacker controls an administrator account, and no additional write path or sandbox escape is supplied.

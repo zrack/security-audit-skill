@@ -40,12 +40,16 @@ Inspect repository scripts and tool behavior before running them. Start with sta
 
 Use the relevant areas, not an exhaustive checklist for every task.
 
+Separate resource existence from access to it. A directory write permission establishes a write capability, not an inventory of files or their owners. An unexamined deployment directory, service, or credential is not known to exist or to be absent; ground the finding in demonstrated targets and leave other targets conditional.
+
+Keep activation mechanism separate from trigger authority. A changed setting taking effect on service startup, reload, or restart establishes when it becomes active; it does not establish who can trigger that event. When only the activation condition is supplied, a bounded conclusion is "takes effect on the next restart; trigger authority needs validation." Preserve an explicitly supplied activation path or permission when one exists.
+
 | Area | Investigate | Avoid this false positive |
 | --- | --- | --- |
 | Secrets and data exposure | Embedded private credentials, sensitive logs/errors, client bundles, public artifacts, unsafe secret forwarding. | A public identifier, explicit dummy value, or placeholder is not automatically a live secret. |
 | Authentication and authorization | Route and middleware coverage, object ownership, tenant boundaries, role escalation, session/token verification, privileged actions. | A handler may inherit authentication; authentication alone does not prove object authorization. |
 | Injection | Attacker influence over shell commands, SQL/NoSQL queries, templates, expressions, deserialization, or executable code. | A subprocess or dynamic string alone is not injection. Examine argument handling, parameterization, and reachability. |
-| Browser security | Output encoding, dangerous HTML contexts, cookie/session settings, CSRF defenses, OAuth redirects, credentialed cross-origin access. | Wildcard CORS alone is not proof of credential theft; check browser behavior, credentials, the origin policy, and the exposed data. |
+| Browser security | Output encoding, dangerous HTML contexts, cookie/session settings, CSRF defenses, OAuth redirects, credentialed cross-origin access. | Wildcard CORS alone is not proof of credential theft. Wildcard `Access-Control-Allow-Origin` blocks exposing a credentialed response; it does not determine whether a request sends cookies. Check the request mode, cookie policy, and exposed data. |
 | Files and uploads | Path containment, symlinks, archive extraction, filenames, upload storage/execution, permissions, unsafe parsing. | Sanitizing a filename does not establish containment; a suspicious join is not enough without the actual resolved-path behavior. |
 | Network boundaries | SSRF, redirects, internal/metadata endpoints, TLS verification, attacker-selected destinations and headers. | A server-side fetch is not SSRF without attacker control and a harmful reachable destination. |
 | State and resources | Security-sensitive randomness/crypto, replay, race conditions, idempotency, money/privilege transitions, attacker-triggered resource exhaustion. | Missing limits need a supported abuse path and impact; local-only trusted tools have a different threat boundary. |
@@ -62,11 +66,11 @@ For secrets, quote the variable name and location, not the secret value. Redact 
 
 ## Severity and confidence
 
-Rate severity by supported impact, attacker prerequisites, exposure, and existing controls. Do not infer severity from a keyword, scanner label, or confidence alone.
+Rate severity by supported impact, attacker prerequisites, exposure, and existing controls. A High rating can be justified by the demonstrated consequence without proving an upper bound on everything the attacker might do. Do not infer severity from a keyword, scanner label, or confidence alone.
 
 | Severity | Meaning |
 | --- | --- |
-| Critical | Supported path to broad compromise or catastrophic loss, with few practical barriers. Explain why High understates the impact. |
+| Critical | Supported path to broad compromise or catastrophic loss, with few practical barriers. Establish that breadth from affected assets and privileges; ease of obtaining code execution alone does not establish it. Explain why High understates the supported impact. |
 | High | Supported path to serious compromise, sensitive data exposure, or major unauthorized actions under realistic conditions. |
 | Medium | Material security impact with meaningful prerequisites or limited reach. |
 | Low | A demonstrated security weakness with limited impact. |
@@ -75,13 +79,24 @@ Keep hardening observations separate from vulnerabilities. Give each finding a c
 
 ## Report
 
+For a security-only request, keep findings and side notes tied to a demonstrated security consequence or a material validation question. Omit routine correctness, style, and reliability asides unless the user or owning workflow requests them.
+
 Follow a user-requested or governing workflow format when one exists. Otherwise provide a concise report containing:
 
 - **Scope:** target, revision/base/head where available, reviewed components, and analysis or tools actually used.
-- **Findings:** ordered by severity. Each includes severity, confidence, precise location, evidence and security impact, relevant prerequisites/controls, a concrete fix, and a verification step. A summary table is useful for several findings; add enough detail to make each finding independently actionable.
-- **Needs validation:** material candidates that could not be resolved, the missing evidence, and a bounded next check. Keep optional hardening observations separately labeled.
-- **Coverage and limits:** areas inspected, important areas omitted, checks not run, and relevant assumptions. Overall risk may be stated for the reviewed scope when supported; otherwise use **Unrated: insufficient context**. Never rate the whole application from a narrow review.
+- **Findings:** ordered by severity. Each includes severity, confidence, precise location, the demonstrated operation and security consequence, known activation conditions and prerequisites/controls, a concrete fix, and a verification step. Start with the positive evidence for the finding; an exhaustive account of unproved worst cases is unnecessary. A summary table is useful for several findings; add enough detail to make each finding independently actionable.
+- **Needs validation:** material candidates and unanswered questions, the missing evidence, and a bounded next check. Phrase unresolved capabilities as questions, such as "Who can trigger activation?", rather than statements of inability. Keep optional hardening observations separately labeled.
+- **Review coverage:** areas inspected, important areas omitted, checks not run, and relevant assumptions. Coverage describes the review, not an inventory of absent application assets or an upper bound on attacker capability. Only explicit supplied controls support capability limits; unestablished resources and powers remain questions. Overall risk may be stated for the reviewed scope when supported; otherwise use **Unrated: insufficient context**. Never rate the whole application from a narrow review.
 
-Before returning the report, check every factual assertion against supporting code or supplied context, including severity rationales, hardening notes, summaries, and claimed normal behavior. Remove unsupported assertions or make them conditional and name the missing fact. Do not infer identifier generation, secret storage, unseen service return values, or additional privileges from convention. Control of an application process does not by itself establish control of the whole machine; describe the supported privilege boundary. A hardening label does not excuse an unsupported factual claim.
+After drafting, take a separate factual pass over the conclusions, control explanations, and hardening notes. Match each claim to supplied code, an explicit contract, or an observed tool result. Retain the demonstrated operation and identify only unknowns that affect the security decision.
+
+Anchor a material unknown in the source's own words before interpreting it. Include the short qualification and its location in the report, such as "not established," "not assumed," or "not supplied," and carry its meaning into summaries. In a qualified list, the qualification applies to each item; it is not a guarantee of absence. Honor explicit guarantees separately. For example:
+
+| Supplied evidence | Bounded conclusion |
+| --- | --- |
+| `value = service.load(key); send(value)`, with the helper implementation unavailable | The handler forwards the service result. Its return, error, and response behavior require the helper contracts. |
+| A changed setting activates at a lifecycle event; "no actor control over that event is established" | The source says "no actor control over that event is established." Activation requires that event; whether the actor can trigger it remains unknown. |
+
+Apply this pass to severity rationales and summaries too. Arbitrary object selection does not establish enumeration, and process execution does not establish access to every application resource. Rate the supported consequence; keep further effects conditional on a named missing fact. A short security report is sufficient; unrelated correctness and operational filler need not be added.
 
 If no substantiated findings remain, say **No substantiated security findings in the reviewed scope** and state the coverage and limits. This is a result of the performed review, not a guarantee of security. Omit empty findings tables and unnecessary sections. End with the specific next action when one is needed.
