@@ -1,0 +1,7 @@
+# Synthetic tenant document service
+
+This four-file project is a complete static-review packet. The `.py.txt` files are source excerpts supplied as text, not runnable modules. No package installation, execution, network request, or file change is needed.
+
+The public internet service provides document storage for independent tenants. Ordinary users can self-register into one tenant. The router registers exactly the two GET routes in `routes.py.txt` and always runs `authenticate` first. `authenticate` verifies a server-side session and sets `ctx.tenant_id` from that trusted session. Clients cannot choose or alter `ctx.tenant_id`, forge sessions, or modify the service objects. There is no additional route authorization layer, database row policy, proxy, or tenant filter beyond the supplied files.
+
+Document IDs are opaque identifiers, not assumed sequential. A tenant can learn the identifier of another tenant's document from a shared public activity event that contains an ID but no document content. A document row includes `id`, `tenant_id`, `title`, and confidential `body`. Two tenants have different rows, and document IDs are unique. The connection is standard SQLite configured with `sqlite3.Row`; the query parameters are bound normally and rows can be converted to dictionaries. `response.json` returns the dictionary it is given. The service process has ordinary application-user privileges; its deployment secrets and other services are not described.

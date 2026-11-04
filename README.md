@@ -179,10 +179,11 @@ security-audit-skill/
 ├── docs/validation.md           # Compatibility and validation record
 ├── docs/host-permissions.md     # Useful tools, host controls, and permission checks
 ├── docs/releasing.md            # Verified installation and maintainer release process
-├── evals/                       # Manual behavioral packets and rubric
+├── evals/                       # Shared cases, rubric, and recorded native-host results
 ├── scripts/
 │   ├── install.py               # Personal or project installation
 │   ├── validate.py              # Structural checks
+│   ├── evaluate.py              # Isolated case preparation and explicit result recording
 │   └── package.py               # Distributable package
 ├── tests/                       # Repository tooling tests
 ├── .github/                     # Issue, pull request, and CI configuration
@@ -192,7 +193,7 @@ security-audit-skill/
 └── LICENSE
 ```
 
-The portable instructions live in `SKILL.md`. The host supplies the model, tools, repository access, and authorization. The Python scripts support installation, validation, and packaging; they are not audit engines.
+The portable instructions live in `SKILL.md`. The host supplies the model, tools, repository access, and authorization. The Python scripts support installation, validation, packaging, and evaluation records; they are not audit engines.
 
 ## Development
 
@@ -211,13 +212,15 @@ python3 scripts/package.py
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance and [SECURITY.md](SECURITY.md) to report a vulnerability privately.
 
+For instruction changes, use the [shared native-host evaluation suite](evals/README.md). Its optional standard-library helper prepares isolated cases and records explicit operator grades; it does not call providers or change host permissions.
+
 ## Limits and validation
 
 This is an instruction-only skill, not an audit service or a guarantee that vulnerabilities will be found. Results depend on the host model, available tools, supplied context, review scope, and validation performed. Current advisory checks require access to current primary sources; the report must say when they were not performed.
 
 The skill does not authorize running untrusted code, using discovered credentials, probing services, publishing findings, or implementing fixes. Those actions require authorization from the conversation and any governing workflow.
 
-Validation includes structural checks, synthetic Codex subagent reviews, and live Claude Code desktop runs that confirmed native skill invocation. The live tests also exposed factual and severity-calibration limits; the skill's evidence checks were strengthened and rechecked. See the [validation record](docs/claude-code-validation.md) and [reusable evaluation packets](evals/README.md). These checks are not an effectiveness benchmark and do not establish detection rates or identical behavior across hosts.
+Validation includes structural checks and live native-host evaluations in Claude desktop Code mode and Codex CLI. The [shared results matrix](evals/results/2026-11-03/README.md) preserves baseline failures, fixes, rechecks, and invalidated fixtures. The final development candidate passed all six Codex cases and four of six Claude report-quality cases; both found the seven supported root causes, while Claude retained factual-calibration failures. See [validation and compatibility](docs/validation.md) for the exact scope and limits. These checks are not an effectiveness benchmark and do not establish detection rates or identical behavior across hosts.
 
 Release hardening adds an explicit source-commit check, separate build and publication jobs, build provenance, and verification instructions. These controls establish the origin of a release; they do not certify the security of reviewed code. The [release guide](docs/releasing.md) describes the required GitHub controls and recovery procedure.
 

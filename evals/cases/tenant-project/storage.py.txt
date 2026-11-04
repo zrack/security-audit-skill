@@ -1,0 +1,17 @@
+class Storage:
+    def __init__(self, connection):
+        self.connection = connection
+
+    def find_for_tenant(self, tenant_id, document_id):
+        row = self.connection.execute(
+            "SELECT id, tenant_id, title, body FROM documents WHERE id = ? AND tenant_id = ?",
+            (document_id, tenant_id),
+        ).fetchone()
+        return dict(row) if row is not None else None
+
+    def find_by_id(self, document_id):
+        row = self.connection.execute(
+            "SELECT id, tenant_id, title, body FROM documents WHERE id = ?",
+            (document_id,),
+        ).fetchone()
+        return dict(row) if row is not None else None
