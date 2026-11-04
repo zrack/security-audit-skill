@@ -38,7 +38,7 @@ These are local installations. For Claude Desktop, use its local **Code** mode; 
 Run these commands in your **terminal**, such as Terminal on macOS/Linux or PowerShell on Windows:
 
 ```sh
-git clone --branch v0.2.1 --depth 1 https://github.com/zrack/security-audit-skill.git
+git clone --branch v0.3.0 --depth 1 https://github.com/zrack/security-audit-skill.git
 cd security-audit-skill
 ```
 
