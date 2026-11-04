@@ -2,7 +2,7 @@
 
 This suite checks Security Audit review quality, native invocation, input integrity, and ordinary tool use in Claude Code and Codex. It is a bounded regression evaluation, not a repository security scan, an effectiveness benchmark, or proof of identical behavior across hosts. This guide describes the procedure; it makes no claim that a live run passed.
 
-The [recorded November 3 evaluation](results/2026-11-03/README.md) includes the results matrix, redacted reports, exact candidate snapshots, and unresolved report-quality failures.
+The [accuracy-fix follow-up](results/2026-11-03-accuracy-fix/README.md) includes the selected candidate's full suites, fresh repeats, transfer checks, report warnings, and failed intermediate attempts. The [original November 3 evaluation](results/2026-11-03/README.md) remains unchanged, including its unresolved report-quality failures at that earlier revision. Both records include redacted reports and exact tested instruction snapshots.
 
 The optional evaluation helper needs Python 3.10 or newer and the standard library. It prepares inputs and records operator-supplied grades; it does **not** launch a host, call a provider API, grade accuracy, or change permissions. Use an already available, signed-in host. No provider API credential or additional package is needed. The portable skill works independently of this suite; see the [installation instructions](../README.md#install).
 

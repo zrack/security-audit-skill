@@ -2,19 +2,25 @@
 
 ## Shared native-host evaluation
 
-The November 3, 2026 [shared results matrix](../evals/results/2026-11-03/README.md) records six cases in fresh native sessions for each host, baseline and revised instructions, and two additional Codex baseline repeats. It preserves report-quality failures and excludes two observations whose original CI fixture was incorrect. The [suite and procedure](../evals/README.md) separate invocation, detection, false positives, factual calibration, input integrity, and ordinary tool use.
+The November 3, 2026 [accuracy-fix follow-up](../evals/results/2026-11-03-accuracy-fix/README.md) records full six-case suites, fresh repeats of the two original failure cases, and a separate transfer check in each host. It preserves all 65 new observations, including failed intermediate candidates and configuration diagnostics. The [original 40 observations](../evals/results/2026-11-03/README.md) remain unchanged. The [suite and procedure](../evals/README.md) separate invocation, detection, false positives, factual calibration, input integrity, and ordinary tool use.
 
-| Final candidate observation | Claude desktop Code mode | Codex CLI |
+| Selected development candidate | Claude desktop Code mode | Codex CLI |
 | --- | --- | --- |
-| Report-quality cases passed | 4 of 6 | 6 of 6 |
+| Primary report-quality cases passed | 6 of 6 | 6 of 6 |
+| Fresh original-failure repeats passed | 2 of 2 | 2 of 2 |
+| Separate transfer check passed | 1 of 1 | 1 of 1 |
 | Supported vulnerability root causes found | All 7 in the supplied suite | All 7 in the supplied suite |
 | Confirmed vulnerability false positives | None observed | None observed |
-| Native invocation and input integrity | Verified for all 6 cases | Verified for all 6 cases |
+| Native invocation and input integrity | Verified for all 9 observations | Verified for all 9 observations |
 | Authorized local tests | 2 passed, after Manual Allow once | 2 passed, workspace-write/on-request |
 
-Claude still made unsupported claims about unseen return behavior and upload/restart limits. Those failures remain unresolved in the final candidate; correct vulnerability detection does not establish a factually accurate report. Targeted changes corrected CORS reasoning and improved impact calibration without adding tool restrictions, host configuration changes, dependencies, or mandatory setup.
+The two original Claude failures did not recur in the selected candidate's primary and fresh repeat runs. Opaque helper return/error/response behavior remained unknown, and restart authority and unestablished deployment assets were qualified. The transfer packet also confirmed a positively supplied save-and-activate attack path and an explicit administrator control. The changes focus reports on demonstrated consequences, distinguish resource existence from access and activation conditions from trigger authority, and omit unrequested nonsecurity asides in security-only reviews. They add no tool restrictions, host configuration changes, dependencies, mandatory peer agents, or setup steps.
 
-These results describe development skill digest `1859a7fe51fb93937524262b1b18b3df2d4dd31305094479cd8d4345c9056d15`, not the published v0.2.1 package. Exact inputs, source working-tree context, host surfaces, settings, redacted reports, and evidence digests are in the matrix. Existing host customizations remained present, so this is an observation of configured hosts rather than a controlled comparison of the skill alone. Advisory/network usability was not tested.
+Passing means no material report-quality failure under the recorded adjudications; it does not mean every sentence was flawless. Warnings retain unsupported restart-frequency wording, conditional upload assets and overly broad capability phrasing, a normal-use integer-subclass overgeneralization, and CI verification limits. An earlier candidate passed its primary suite but failed a fresh handler repeat; that failure remains in the matrix. The independent report adjudications and exact warning text are preserved in the records.
+
+These results describe development skill digest `1b5c9b62748d4331f9b82fe20390290c50a826e7234687bd8f41a3dfd908d48c`, not the published v0.2.1 package. Claude used desktop Code mode runtime 2.1.317 with Opus 5.5 Medium and Manual permissions. Codex used CLI 0.166.0-alpha.5.1 with configured gpt-6.1-sol/ultra, workspace-write and on-request approvals; server-resolved model identity was not independently asserted. Exact inputs, source working-tree context, settings, redacted reports, and evidence digests are in the matrix. Existing host customizations remained present, so this is an observation of configured hosts rather than a controlled comparison of the skill alone. Advisory/network usability was not tested.
+
+The core SQLite packet was prospectively clarified to specify mapping-like `sqlite3.Row` results, which its response code needs. Both hosts received identical clarified inputs for the selected candidate. Earlier observations retain their original inputs and grades; comparisons across those two fixture versions are not identical-input comparisons. Other shared inputs and task text were unchanged.
 
 Repository validation, 69 tooling tests, real-suite fixture validation, and the three-file portable package check passed locally. CI also validates the actual case manifest and fixture paths without calling a host or provider. The optional Skill Creator validator could not be rerun because its PyYAML dependency was unavailable; no dependency was added. The repository's independent metadata and documentation validator passed.
 
