@@ -6,7 +6,7 @@ The [accuracy-fix follow-up](results/2026-11-03-accuracy-fix/README.md) includes
 
 The optional evaluation helper needs Python 3.10 or newer and the standard library. It prepares inputs and records operator-supplied grades; it does **not** launch a host, call a provider API, grade accuracy, or change permissions. Use an already available, signed-in host. No provider API credential or additional package is needed. The portable skill works independently of this suite; see the [installation instructions](../README.md#install).
 
-## Six shared cases
+## Seven shared cases
 
 The [suite manifest](suite.json) defines exact reviewer tasks and inputs. Keep the manifest, this guide, the [evaluator rubric](rubric.md), previous answers, and results out of reviewing sessions.
 
@@ -17,6 +17,7 @@ The [suite manifest](suite.json) defines exact reviewer tasks and inputs. Keep t
 | `web-boundaries` | [Web packet](cases/web-boundaries/review-packet.md) | SSRF, browser output, upload paths, corresponding controls |
 | `tenant-project` | [Deployment contract](cases/tenant-project/deployment.md) and three source excerpts | Authorization across routes, services, and storage; hostile comments |
 | `change-review` | [BASE-to-HEAD packet](cases/change-review/review-packet.md) | CI trust boundaries, introduced versus pre-existing issues, controlled workflow |
+| `invoice-setting` | [Historical case packet](cases/invoice-setting/CASE.md) and three source files | Evidence recovery, local review authority, conditional closure impact |
 | `normal-use` | [Code](cases/normal-use/pricing.py), [diff](cases/normal-use/review.diff), and [tests](cases/normal-use/test_pricing.py) | Useful reading, diff inspection, and authorized local tests without unnecessary friction |
 
 All cases are static-only except `normal-use`. That case authorizes the reviewer to inspect and run its supplied standard-library unit tests. It does not authorize dependency installation, network access, or source edits. Advisory/network usability is not measured by this offline suite.
@@ -100,7 +101,9 @@ python3 scripts/evaluate.py matrix "../security-audit-eval-runs/codex/legacy-cor
 
 This creates `results-01.md` and `results-01.json`. Existing outputs are refused. The matrix checks manifest and evidence digests and grade consistency, preserves failures/incomplete observations, and rejects duplicate runs. Hashes detect inconsistency; they are not signatures against someone rewriting both evidence and records. The helper does not independently judge the operator's accuracy grades.
 
-Use identical case-input hashes and skill digests for paired host comparisons. Run all six cases, then repeat a small subset in additional fresh sessions to expose variation. For instruction fixes, recheck each failing case in both hosts and include at least one case not used to draft the correction. Retain baseline and revised observations separately; explain which cases were repeated and why.
+Use identical case-input hashes and skill digests for paired host comparisons. Run all seven cases, then repeat a small subset in additional fresh sessions to expose variation. For instruction fixes, recheck each failing case in both hosts and include at least one case not used to draft the correction. Retain baseline and revised observations separately; explain which cases were repeated and why.
+
+For a blind `invoice-setting` pilot, use fresh skill-on and skill-off sessions on each host with the same case files, common task, and permission mode. In each control, exclude the target skill from the host session. Give two independent graders the [rubric](rubric.md), source packet, and four reports with randomized identifiers. Record their grades before revealing the conditions.
 
 If a fixture itself is wrong, preserve the original result and evidence. Add an operator-only `adjudication.json` beside `result.json` with exactly these fields:
 
@@ -118,7 +121,7 @@ Keep raw traces private: they can contain account paths, session identifiers, un
 
 ## Legacy direct manual procedure
 
-The original packets remain usable without the helper. The procedure and prompts below cover those two packets; use the shared [rubric](rubric.md) for all six cases. Record the same evidence and separate dimensions even when preparation is manual.
+The original packets remain usable without the helper. The procedure and prompts below cover those two packets. Use the shared [rubric](rubric.md) for every case. Record the same evidence and separate dimensions even when preparation is manual.
 
 1. Record the skill source revision, any relevant working-tree changes, and the installed `SKILL.md` digest. Verify that the installed copy matches the skill version being evaluated. Record the host, model setting, and date without account identifiers or private session data.
 2. Create a disposable, otherwise empty working directory. Copy only the selected file from [packets](packets) into it, retaining its filename. Do not give the reviewing model this README, expected outcomes, previous reports, or the other packet. The installed skill and supplied packet are the review inputs; this repository is not the review target.
@@ -180,4 +183,4 @@ Invoke the installed security-audit skill through this host's native skills mech
 
 For Codex, record native skill selection/loading and the installed skill path or digest shown by the available session trace. Codex need not expose Claude Code's `Skill` tool. Distinguish native host resolution from a report that merely mentions the skill. Where the host cannot expose sufficient evidence, mark invocation unverified. Do not substitute a generic review or a simulated invocation and call it a native run.
 
-Use the shared [evaluator rubric](rubric.md) and the recording procedure above for these legacy prompts too. Keep one grading standard across all six cases.
+Use the shared [evaluator rubric](rubric.md) and the recording procedure above for these legacy prompts too. Keep one grading standard across the suite.

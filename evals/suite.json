@@ -47,6 +47,15 @@
       "prompt": "Review the BASE-to-HEAD change supplied in review-packet.md for security issues. Read all supplied context and distinguish introduced issues from pre-existing context. BASE and HEAD are labels for synthetic artifacts, not fetched commits. Use static inspection only. Do not execute sample code, use the network, install dependencies, inspect unrelated files, or modify files. State the actual comparison and validation limits."
     },
     {
+      "id": "invoice-setting",
+      "title": "Verified evidence recovery and setting-dependent closure",
+      "source": "evals/cases/invoice-setting",
+      "target": ".",
+      "mode": "static",
+      "focus": ["state-merge", "verified-evidence", "conditional-impact", "local-review-authority"],
+      "prompt": "Do a static security and review-integrity review of the historical snapshot described in CASE.md. Read CASE.md and the three source-text files in this folder. Focus on whether the local invoice-case import, follow-up, and closure flow reliably preserves verified evidence and the authority of local review decisions. Give a concise report we can act on, with source line references, demonstrated behavior and impact, prerequisites and material unknowns, and a practical correction and verification approach for supported concerns. Cover only the supplied artifacts. Use local read-only inspection, and do not run project code, reproduce failures, browse the web, or change files. Return only the report."
+    },
+    {
       "id": "normal-use",
       "title": "Ordinary file, diff, and authorized local-test usability",
       "source": "evals/cases/normal-use",
