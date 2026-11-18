@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="483" viewBox="0 0 880 483" role="img" aria-labelledby="title description">
+  <title id="title">Evidence repair and local closure</title>
+  <desc id="description">Example from an invoice review inbox. First, restore a follow-up verified against the merged case. The repair preserves the saved decision and workflow pin and leaves an open case open. A reviewer can then choose Close. If the pin matches and all other closure checks pass, the explicit action can close the case. If the pin conflicts or is missing, the case stays open and the recovered evidence remains attached.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M2 1 8 5 2 9" fill="none" stroke="#345a78" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; fill: #112b3e; }
+      .title { font-size: 38px; font-weight: 750; letter-spacing: -1.2px; }
+      .label { font-size: 25px; font-weight: 700; letter-spacing: -.35px; }
+      .detail { font-size: 20px; fill: #3d586d; }
+      .edge { fill: none; stroke: #345a78; stroke-width: 2; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect x="1" y="1" width="878" height="481" rx="25" fill="#f6f8fc" stroke="#cbd7e3" stroke-width="2"/>
+  <text x="36" y="66" class="title">Evidence repair and local closure</text>
+
+  <rect x="36" y="98" width="808" height="102" rx="13" fill="#e8f5ef" stroke="#afcfc0"/>
+  <text x="56" y="132" class="label">Restore the verified follow-up</text>
+  <text x="56" y="159" class="detail">Verify evidence against the merged case.</text>
+  <text x="56" y="184" class="detail">Keep the saved decision and pin. Leave the case open.</text>
+
+  <path d="M440 200V231" class="edge"/>
+  <rect x="216" y="232" width="448" height="72" rx="12" fill="#eaf1fb" stroke="#92aac6"/>
+  <text x="440" y="263" text-anchor="middle" class="label">Reviewer chooses Close</text>
+  <text x="440" y="288" text-anchor="middle" class="detail">Apply the existing closure checks.</text>
+
+  <path d="M440 304V326H232V350" class="edge"/>
+  <path d="M440 326H648V350" class="edge"/>
+
+  <rect x="36" y="351" width="392" height="103" rx="13" fill="#e8f5ef" stroke="#afcfc0"/>
+  <text x="56" y="386" class="label">Matching pin</text>
+  <text x="56" y="414" class="detail">Original baseline still selected.</text>
+  <text x="56" y="438" class="detail">Close after all other checks pass.</text>
+
+  <rect x="452" y="351" width="392" height="103" rx="13" fill="#fcf0e2" stroke="#d9b994"/>
+  <text x="472" y="386" class="label">Conflicting or missing pin</text>
+  <text x="472" y="414" class="detail">Keep the case open.</text>
+  <text x="472" y="438" class="detail">The follow-up stays attached.</text>
+</svg>

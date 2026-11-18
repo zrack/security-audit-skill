@@ -4,9 +4,9 @@ A reusable skill for evidence-backed security reviews in Claude Code and Codex.
 
 Security Audit gives your coding agent a review method: establish the scope, trace a suspected issue through the surrounding code, check existing controls, and report only what the evidence supports. It works with the host's available tools and can fit inside an existing security-review workflow.
 
-![Security Audit workflow: define the scope, investigate the path, check controls, and report supported findings with coverage limits.](assets/security-audit-workflow.svg)
+[Install](#install) · [First review](#use) · [Review workflow](#review-workflow) · [Report example](#what-to-expect) · [Troubleshooting](#troubleshooting)
 
-[Install](#install) · [First review](#use) · [Troubleshooting](#troubleshooting)
+![A review request and the portable skill feed one local Claude Code or Codex session. The host supplies the model, project access, tools, and approvals. The session returns a review report.](assets/security-audit-architecture.svg)
 
 ## What it reviews
 
@@ -38,7 +38,7 @@ These are local installations. For Claude Desktop, use its local **Code** mode; 
 Run these commands in your **terminal**, such as Terminal on macOS/Linux or PowerShell on Windows:
 
 ```sh
-git clone --branch v0.3.0 --depth 1 https://github.com/zrack/security-audit-skill.git
+git clone --branch v0.3.1 --depth 1 https://github.com/zrack/security-audit-skill.git
 cd security-audit-skill
 ```
 
@@ -141,6 +141,10 @@ The skill activates for security-focused work. It is not intended to turn every 
 
 Use your normal host permissions. Code reading, search, diffs, authorized local tests, and current advisory lookups are useful review capabilities. This skill neither grants tools nor installs tool restrictions. See [practical host permissions](docs/host-permissions.md) for choosing the scope and checking approvals without disabling useful work.
 
+## Review workflow
+
+![The review establishes its target and revision, traces inputs across trust boundaries, checks safeguards and counterexamples, and reports supported impact, a correction, verification, and coverage limits.](assets/security-audit-workflow.svg)
+
 ## Troubleshooting
 
 | Symptom | Check |
@@ -157,11 +161,17 @@ Host discovery details: [Claude Code skills](https://code.claude.com/docs/en/ski
 
 ## What to expect
 
-A report records the reviewed target and revision, the evidence actually examined, and the limits of the review. Findings include severity, confidence, location, impact, relevant prerequisites, a concrete fix, and a verification step. Unresolved candidates explain the missing evidence and a bounded next check.
+A report records the reviewed target and revision, the evidence actually examined, and the limits of the review. Findings include severity, confidence, location, impact, relevant prerequisites, a concrete fix, and a verification step. Severity reflects the supported impact and its prerequisites. Confidence reflects the strength of the evidence and any material assumptions. Unresolved candidates explain the missing evidence and a bounded next check.
 
 When the evidence does not support a finding, the result is **No substantiated security findings in the reviewed scope**, followed by coverage and limits. A narrow review does not justify rating the security of the whole application.
 
 See the [synthetic example report](examples/review-report.md) for the expected format. A user-requested report format or governing workflow takes precedence over that example.
+
+### Example of evidence repair
+
+A saved decision can cause a review inbox to discard a verified follow-up during import. The workflow pin identifies the baseline used for comparison. After recovery, that pin affects whether the reviewer can close the case.
+
+![Restore the follow-up after verifying it against the merged case. Preserve the saved decision and pin and leave the case open. An explicit close succeeds with a matching pin and passing checks. A conflicting or missing pin keeps the case open and preserves the recovered evidence.](assets/evidence-repair-and-closure.svg)
 
 ## How the repository is organized
 
@@ -172,7 +182,9 @@ security-audit-skill/
 │   ├── agents/openai.yaml        # Codex display metadata and default prompt
 │   └── LICENSE                  # MIT notice retained in portable installs
 ├── assets/
-│   └── security-audit-workflow.svg
+│   ├── security-audit-architecture.svg
+│   ├── security-audit-workflow.svg
+│   └── evidence-repair-and-closure.svg
 ├── examples/
 │   ├── review-packet.md         # Synthetic code and review context
 │   └── review-report.md         # Synthetic report example
